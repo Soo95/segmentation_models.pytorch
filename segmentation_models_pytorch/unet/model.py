@@ -1,4 +1,4 @@
-from .decoder import UnetDecoder
+from .decoder import UnetDecoder, scSE_UnetDecoder, scSE_hyper_UnetDecoder
 from ..base import EncoderDecoder
 from ..encoders import get_encoder
 
@@ -32,6 +32,8 @@ class Unet(EncoderDecoder):
             encoder_weights='imagenet',
             decoder_use_batchnorm=True,
             decoder_channels=(256, 128, 64, 32, 16),
+            scSE=False,
+            hyper=False,
             classes=1,
             activation='sigmoid',
             center=False,  # usefull for VGG models
@@ -40,14 +42,33 @@ class Unet(EncoderDecoder):
             encoder_name,
             encoder_weights=encoder_weights
         )
-
-        decoder = UnetDecoder(
-            encoder_channels=encoder.out_shapes,
-            decoder_channels=decoder_channels,
-            final_channels=classes,
-            use_batchnorm=decoder_use_batchnorm,
-            center=center,
-        )
+        
+        if scSE == True and hyper==True:
+            decoder_channels=(64, 64, 64, 64, 64)
+            classes=64
+            decoder = scSE_hyper_UnetDecoder(
+                encoder_channels=encoder.out_shapes,
+                decoder_channels=decoder_channels,
+                final_channels=classes,
+                use_batchnorm=decoder_use_batchnorm,
+                center=center,
+            )
+        elif scSE == True and hyper==False:
+            decoder = scSE_UnetDecoder(
+                encoder_channels=encoder.out_shapes,
+                decoder_channels=decoder_channels,
+                final_channels=classes,
+                use_batchnorm=decoder_use_batchnorm,
+                center=center,
+            )
+        else:
+            decoder = UnetDecoder(
+                encoder_channels=encoder.out_shapes,
+                decoder_channels=decoder_channels,
+                final_channels=classes,
+                use_batchnorm=decoder_use_batchnorm,
+                center=center,
+            )
 
         super().__init__(encoder, decoder, activation)
 
